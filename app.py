@@ -20,6 +20,15 @@ st.set_page_config(
 st.markdown("""
 <style>
     .stApp {
+    /* Piilottaa yläpalkin, valikon ja jalustan */
+    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    
+    /* Poistaa tyhjän tilan ylhäältä, jotta logo nousee ylemmäs */
+    .block-container {
+        padding-top: 0rem !important;
+    }
         background: linear-gradient(135deg, #ffafbd 0%, #ffc3a0 50%, #c9ffbf 100%);
         background-attachment: fixed;
     }
