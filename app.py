@@ -10,26 +10,19 @@ st.set_page_config(
     page_title="Aurora - Kultainen hetki", 
     page_icon="🌅", 
     layout="centered",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded"
 )
 
-# 2. TYYLITIEDOSTO (Kaikki palkit ja headerit poistettu)
+# 2. TYYLITIEDOSTO (Sisältää yläpalkin piilotuksen)
 st.markdown("""
 <style>
-    /* Piilotetaan kaikki Streamlitin omat käyttöliittymäelementit */
-    header {visibility: hidden !important;}
-    footer {visibility: hidden !important;}
-    #MainMenu {visibility: hidden !important;}
-    .stAppDeployButton {display:none !important;}
-    [data-testid="stHeader"] {display: none !important;}
-    
-    /* Siirretään sisältöä ylemmäs, kun palkki on poistettu */
-    .block-container {
-        padding-top: 0rem !important;
-        padding-bottom: 0rem !important;
-    }
+    /* Piilotetaan yläpalkki ja Streamlit-valikko */
+    header {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stAppDeployButton {display:none;}
 
-    /* Taustaväri: Pehmeä pastelliliukuväri kuvasi mukaan */
+    /* Taustaväri: Pehmeä pastelliliukuväri */
     .stApp {
         background: linear-gradient(180deg, #ffafbd 0%, #ffc3a0 50%, #eeffad 100%);
         font-family: 'Segoe UI', sans-serif;
@@ -52,14 +45,13 @@ st.markdown("""
         color: #3e4a61;
         text-align: center;
         margin-top: 0px;
-        padding-top: 20px;
     }
 
     .sub-title {
         color: #3e4a61;
         text-align: center;
         font-size: 1.3rem;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
     }
 
     .time-label { font-size: 1rem; color: #4a5568; }
@@ -73,7 +65,6 @@ st.markdown("""
         padding: 15px;
         color: #ffffff;
         text-align: center;
-        margin-bottom: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -102,6 +93,7 @@ st.markdown("<h1>AURORA</h1>", unsafe_allow_html=True)
 st.markdown(f'<p class="sub-title">Auringonlasku ja auringonnousu: {selected_city}</p>', unsafe_allow_html=True)
 
 st.markdown('<div class="ad-slot">Tähän paikkaan voit varata mainoksen</div>', unsafe_allow_html=True)
+st.write("")
 
 # Kultainen hetki kortti
 st.markdown(f'<div class="glass-card"><p class="time-label">✨ Kultainen hetki alkaa kohteessa {selected_city}</p>', unsafe_allow_html=True)
