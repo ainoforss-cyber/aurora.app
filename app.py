@@ -10,13 +10,13 @@ st.set_page_config(
     page_title="Auringonlasku ja auringonnousu tänään – Aurora",
     page_icon="🌅",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed", # Piilotetaan sivupalkki oletuksena
     menu_items={
         'About': "Aurora - Tarkista auringonnousu, auringonlasku ja kultainen hetki kaikissa Suomen kaupungeissa."
     }
 )
 
-# 2. ULKOASU: LUXURY GLASSMORPHISM
+# 2. ULKOASU: LUXURY GLASSMORPHISM (Säilytetty täysin samana)
 st.markdown("""
 <style>
     .stApp {
@@ -34,16 +34,9 @@ st.markdown("""
         margin-bottom: 20px;
     }
 
+    /* Poistetaan sivupalkin elementit käytöstä */
     [data-testid="stSidebar"] {
-        background-color: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(15px);
-    }
-    
-    [data-testid="stSidebar"] .stMarkdown p, 
-    [data-testid="stSidebar"] label, 
-    [data-testid="stSidebar"] h3 {
-        color: #2c3e50 !important;
-        font-weight: 600 !important;
+        display: none;
     }
 
     .glass-card {
@@ -101,6 +94,14 @@ st.markdown("""
         background: rgba(255, 255, 255, 0.4);
         transform: translateY(-2px);
     }
+    
+    /* Tyyli uusia valikoita varten pääsivulla */
+    .menu-container {
+        background: rgba(255, 255, 255, 0.15);
+        padding: 20px;
+        border-radius: 25px;
+        margin-bottom: 30px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -111,26 +112,33 @@ kaupungit = {
     "Rovaniemi": {"lat": 66.50, "lon": 25.72}, "Inari": {"lat": 68.90, "lon": 27.02}
 }
 
-with st.sidebar:
-    st.markdown("### ⚙️ Asetukset")
-    valittu_nimi = st.selectbox("Valitse paikkakunta", list(kaupungit.keys()))
+st.title("AURORA")
+
+# 4. VALIKKO PÄÄSIVULLA (Korvaa sivupalkin)
+st.markdown("<div class='menu-container'>", unsafe_allow_html=True)
+col_a, col_b = st.columns(2)
+
+with col_a:
+    valittu_nimi = st.selectbox("📍 Valitse paikkakunta", list(kaupungit.keys()))
+
+with col_b:
     kuukaudet = ["Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu", 
                  "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"]
-    valittu_kk = st.select_slider("Kuukausi", options=kuukaudet, value="Maaliskuu")
+    valittu_kk = st.selectbox("📅 Valitse kuukausi", options=kuukaudet, index=2) # Oletus: Maaliskuu
     kk_nro = kuukaudet.index(valittu_kk) + 1
+st.markdown("</div>", unsafe_allow_html=True)
 
-# 4. LASKENTA
+# 5. LASKENTA (Säilytetty samana)
 coords = kaupungit[valittu_nimi]
 loc = LocationInfo(valittu_nimi, "Finland", "Europe/Helsinki", coords["lat"], coords["lon"])
 tz = pytz.timezone(loc.timezone)
 nyt_tz = datetime.datetime.now(tz)
 
-st.title("AURORA")
 st.markdown(f"<h2 style='text-align: center; color: white; font-size: 1.2rem; opacity: 0.9;'>Auringonlasku ja auringonnousu: {valittu_nimi}</h2>", unsafe_allow_html=True)
 
 st.markdown("<div class='ad-slot'>Tähän paikkaan voit varata mainoksen</div>", unsafe_allow_html=True)
 
-# Countdown
+# Countdown (Säilytetty samana)
 try:
     gh_tanaan, _ = golden_hour(loc.observer, date=nyt_tz.date(), direction=SunDirection.SETTING, tzinfo=tz)
     aika_ero = gh_tanaan - nyt_tz
@@ -140,14 +148,14 @@ try:
         st.markdown(f"<div class='glass-card'><p style='margin:0; opacity: 0.8;'>✨ Kultainen hetki alkaa kohteessa {valittu_nimi}</p><div class='countdown-text'>{t_cd}h {m_cd}min päästä</div></div>", unsafe_allow_html=True)
 except: pass
 
-# Metriikat
+# Metriikat (Säilytetty samana)
 s_tanaan = sun(loc.observer, date=nyt_tz.date(), tzinfo=tz)
 m1, m2, m3 = st.columns(3)
 with m1: st.metric("🌅 Nousuaika", s_tanaan['sunrise'].strftime('%H:%M'))
 with m2: st.metric("✨ Kultainen hetki", gh_tanaan.strftime('%H:%M'))
 with m3: st.metric("🌆 Laskuaika", s_tanaan['sunset'].strftime('%H:%M'))
 
-# TÄSSÄ MUOKATTU HYVINVOINTIVINKKI
+# Hyvinvointivinkki (Säilytetty samana)
 st.markdown(f"""
     <div class='glass-card' style='background: rgba(201, 255, 191, 0.3); border-left: 10px solid #c9ffbf;'>
         <p style='margin:0;'><b>🌿 Hyvinvointivinkki:</b> Luonnonvalo parantaa mielialaa ja auttaa jaksamaan. 
@@ -155,7 +163,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# 5. KUUKAUSITAULUKKO
+# 6. KUUKAUSITAULUKKO (Säilytetty samana)
 st.divider()
 st.markdown(f"<h3 style='text-align: center; color: white;'>Auringon lasku- ja nousuajat: {valittu_nimi} — {valittu_kk}</h3>", unsafe_allow_html=True)
 
@@ -178,7 +186,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# TÄSSÄ PÄIVITETTY SÄHKÖPOSTI
+# SÄHKÖPOSTI
 st.markdown("""
     <div style='text-align: center; margin-top: 20px;'>
         <a href='mailto:aino.forss@gmail.com?subject=Mainostiedustelu - Aurora App' class='contact-btn'>
