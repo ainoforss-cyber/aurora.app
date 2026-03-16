@@ -1,198 +1,156 @@
 import streamlit as st
 import pandas as pd
-from astral.sun import sun, golden_hour
-from astral import LocationInfo, SunDirection
+from astral import LocationInfo
+from astral.sun import sun
 import datetime
 import pytz
 
-# 1. SEO & META-TIEDOT
+# 1. SIVUN ASETUKSET
 st.set_page_config(
-    page_title="Auringonlasku ja auringonnousu tänään – Aurora",
-    page_icon="🌅",
-    layout="wide",
-    initial_sidebar_state="collapsed", # Piilotetaan sivupalkki oletuksena
-    menu_items={
-        'About': "Aurora - Tarkista auringonnousu, auringonlasku ja kultainen hetki kaikissa Suomen kaupungeissa."
-    }
+    page_title="Aurora - Kultainen hetki", 
+    page_icon="🌅", 
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# 2. ULKOASU: LUXURY GLASSMORPHISM (Säilytetty täysin samana)
+# 2. TYYLITIEDOSTO (Kaikki palkit ja headerit poistettu)
 st.markdown("""
 <style>
-    .stApp {
-        background: linear-gradient(135deg, #ffafbd 0%, #ffc3a0 50%, #c9ffbf 100%);
-        background-attachment: fixed;
-    }
+    /* Piilotetaan kaikki Streamlitin omat käyttöliittymäelementit */
+    header {visibility: hidden !important;}
+    footer {visibility: hidden !important;}
+    #MainMenu {visibility: hidden !important;}
+    .stAppDeployButton {display:none !important;}
+    [data-testid="stHeader"] {display: none !important;}
     
-    h1 { 
-        color: white !important; 
-        font-family: 'Inter', sans-serif;
-        font-weight: 800 !important;
-        text-align: center;
-        text-shadow: 0px 4px 15px rgba(0,0,0,0.1);
-        font-size: clamp(2.5rem, 8vw, 5rem) !important;
-        margin-bottom: 20px;
+    /* Siirretään sisältöä ylemmäs, kun palkki on poistettu */
+    .block-container {
+        padding-top: 0rem !important;
+        padding-bottom: 0rem !important;
     }
 
-    /* Poistetaan sivupalkin elementit käytöstä */
-    [data-testid="stSidebar"] {
-        display: none;
+    /* Taustaväri: Pehmeä pastelliliukuväri kuvasi mukaan */
+    .stApp {
+        background: linear-gradient(180deg, #ffafbd 0%, #ffc3a0 50%, #eeffad 100%);
+        font-family: 'Segoe UI', sans-serif;
     }
 
+    /* Lasimaiset kortit */
     .glass-card {
-        background: rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(15px);
-        border-radius: 25px;
-        border: 1px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(5px);
+        border-radius: 30px;
         padding: 20px;
         margin-bottom: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
         text-align: center;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
     }
 
-    .countdown-text {
-        font-size: clamp(1.5rem, 5vw, 2.2rem);
-        font-weight: 800;
-        color: #ff6b6b;
-    }
-
-    div[data-testid="stMetric"] {
-        background: rgba(255, 255, 255, 0.2) !important;
-        backdrop-filter: blur(10px);
-        border-radius: 20px !important;
-        padding: 10px !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-    }
-
-    p, span, label { color: #2c3e50 !important; font-weight: 600; }
-    
-    .ad-slot {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px dashed rgba(255, 255, 255, 0.5);
-        border-radius: 15px;
-        padding: 15px;
+    h1 {
+        font-size: 4rem !important;
+        font-weight: 700;
+        color: #3e4a61;
         text-align: center;
-        color: white;
-        font-size: 0.8rem;
-        margin: 10px 0;
+        margin-top: 0px;
+        padding-top: 20px;
     }
 
-    .contact-btn {
-        background: rgba(255, 255, 255, 0.25);
-        border: 1px solid rgba(255, 255, 255, 0.5);
-        padding: 15px 30px;
-        border-radius: 50px;
+    .sub-title {
+        color: #3e4a61;
         text-align: center;
-        color: white !important;
-        font-weight: bold;
-        text-decoration: none;
-        display: inline-block;
-        transition: 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-    .contact-btn:hover {
-        background: rgba(255, 255, 255, 0.4);
-        transform: translateY(-2px);
-    }
-    
-    /* Tyyli uusia valikoita varten pääsivulla */
-    .menu-container {
-        background: rgba(255, 255, 255, 0.15);
-        padding: 20px;
-        border-radius: 25px;
+        font-size: 1.3rem;
         margin-bottom: 30px;
+    }
+
+    .time-label { font-size: 1rem; color: #4a5568; }
+    .time-value { font-size: 2.2rem; font-weight: 600; color: #2d3748; }
+    .countdown { font-size: 2.5rem; font-weight: 800; color: #f56565; }
+
+    .ad-slot {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px dashed rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        padding: 15px;
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 20px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. DATA
-kaupungit = {
-    "Helsinki": {"lat": 60.17, "lon": 24.94}, "Turku": {"lat": 60.45, "lon": 22.26},
-    "Tampere": {"lat": 61.49, "lon": 23.76}, "Oulu": {"lat": 65.01, "lon": 25.46},
-    "Rovaniemi": {"lat": 66.50, "lon": 25.72}, "Inari": {"lat": 68.90, "lon": 27.02}
+# 3. KAUPUNKIEN TIEDOT
+CITIES = {
+    "Helsinki": {"lat": 60.1695, "lon": 24.9354},
+    "Tampere": {"lat": 61.4978, "lon": 23.7610},
+    "Turku": {"lat": 60.4518, "lon": 22.2666},
+    "Oulu": {"lat": 65.0121, "lon": 25.4651},
+    "Rovaniemi": {"lat": 66.5039, "lon": 25.7282}
 }
 
-st.title("AURORA")
+# 4. SIVUPALKKI
+st.sidebar.title("Asetukset")
+selected_city = st.sidebar.selectbox("Valitse sijainti", list(CITIES.keys()))
 
-# 4. VALIKKO PÄÄSIVULLA (Korvaa sivupalkin)
-st.markdown("<div class='menu-container'>", unsafe_allow_html=True)
-col_a, col_b = st.columns(2)
+# 5. LASKELMAT
+loc = LocationInfo(selected_city, "Finland", "Europe/Helsinki", CITIES[selected_city]["lat"], CITIES[selected_city]["lon"])
+s = sun(loc.observer, date=datetime.date.today(), tzinfo=pytz.timezone("Europe/Helsinki"))
+golden_hour_start = s['sunset'] - datetime.timedelta(minutes=60)
+now = datetime.datetime.now(pytz.timezone("Europe/Helsinki"))
 
-with col_a:
-    valittu_nimi = st.selectbox("📍 Valitse paikkakunta", list(kaupungit.keys()))
+# 6. PÄÄSIVUN SISÄLTÖ
+st.markdown("<h1>AURORA</h1>", unsafe_allow_html=True)
+st.markdown(f'<p class="sub-title">Auringonlasku ja auringonnousu: {selected_city}</p>', unsafe_allow_html=True)
 
-with col_b:
-    kuukaudet = ["Tammikuu", "Helmikuu", "Maaliskuu", "Huhtikuu", "Toukokuu", "Kesäkuu", 
-                 "Heinäkuu", "Elokuu", "Syyskuu", "Lokakuu", "Marraskuu", "Joulukuu"]
-    valittu_kk = st.selectbox("📅 Valitse kuukausi", options=kuukaudet, index=2) # Oletus: Maaliskuu
-    kk_nro = kuukaudet.index(valittu_kk) + 1
+st.markdown('<div class="ad-slot">Tähän paikkaan voit varata mainoksen</div>', unsafe_allow_html=True)
+
+# Kultainen hetki kortti
+st.markdown(f'<div class="glass-card"><p class="time-label">✨ Kultainen hetki alkaa kohteessa {selected_city}</p>', unsafe_allow_html=True)
+if now < golden_hour_start:
+    diff = golden_hour_start - now
+    hours, remainder = divmod(diff.seconds, 3600)
+    minutes, _ = divmod(remainder, 60)
+    st.markdown(f'<p class="countdown">{hours}h {minutes}min päästä</p>', unsafe_allow_html=True)
+else:
+    st.markdown('<p class="countdown" style="color: #4a5568;">Nauti illasta</p>', unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
-# 5. LASKENTA (Säilytetty samana)
-coords = kaupungit[valittu_nimi]
-loc = LocationInfo(valittu_nimi, "Finland", "Europe/Helsinki", coords["lat"], coords["lon"])
-tz = pytz.timezone(loc.timezone)
-nyt_tz = datetime.datetime.now(tz)
-
-st.markdown(f"<h2 style='text-align: center; color: white; font-size: 1.2rem; opacity: 0.9;'>Auringonlasku ja auringonnousu: {valittu_nimi}</h2>", unsafe_allow_html=True)
-
-st.markdown("<div class='ad-slot'>Tähän paikkaan voit varata mainoksen</div>", unsafe_allow_html=True)
-
-# Countdown (Säilytetty samana)
-try:
-    gh_tanaan, _ = golden_hour(loc.observer, date=nyt_tz.date(), direction=SunDirection.SETTING, tzinfo=tz)
-    aika_ero = gh_tanaan - nyt_tz
-    sekunnit = aika_ero.total_seconds()
-    if sekunnit > 0:
-        t_cd, m_cd = int(sekunnit // 3600), int((sekunnit % 3600) // 60)
-        st.markdown(f"<div class='glass-card'><p style='margin:0; opacity: 0.8;'>✨ Kultainen hetki alkaa kohteessa {valittu_nimi}</p><div class='countdown-text'>{t_cd}h {m_cd}min päästä</div></div>", unsafe_allow_html=True)
-except: pass
-
-# Metriikat (Säilytetty samana)
-s_tanaan = sun(loc.observer, date=nyt_tz.date(), tzinfo=tz)
-m1, m2, m3 = st.columns(3)
-with m1: st.metric("🌅 Nousuaika", s_tanaan['sunrise'].strftime('%H:%M'))
-with m2: st.metric("✨ Kultainen hetki", gh_tanaan.strftime('%H:%M'))
-with m3: st.metric("🌆 Laskuaika", s_tanaan['sunset'].strftime('%H:%M'))
-
-# Hyvinvointivinkki (Säilytetty samana)
+# Aikakortit
 st.markdown(f"""
-    <div class='glass-card' style='background: rgba(201, 255, 191, 0.3); border-left: 10px solid #c9ffbf;'>
-        <p style='margin:0;'><b>🌿 Hyvinvointivinkki:</b> Luonnonvalo parantaa mielialaa ja auttaa jaksamaan. 
-        Paras aika ulkoilulle kohteessa {valittu_nimi} on tänään klo {s_tanaan['sunrise'].hour + 1} ja {s_tanaan['sunset'].hour - 1} välillä.</p>
-    </div>
+<div class="glass-card">
+    <p class="time-label">🌅 Nousuaika</p>
+    <p class="time-value">{s['sunrise'].strftime('%H:%M')}</p>
+</div>
+<div class="glass-card">
+    <p class="time-label">✨ Kultainen hetki</p>
+    <p class="time-value">{golden_hour_start.strftime('%H:%M')}</p>
+</div>
+<div class="glass-card">
+    <p class="time-label">🌇 Laskuaika</p>
+    <p class="time-value">{s['sunset'].strftime('%H:%M')}</p>
+</div>
 """, unsafe_allow_html=True)
 
-# 6. KUUKAUSITAULUKKO (Säilytetty samana)
-st.divider()
-st.markdown(f"<h3 style='text-align: center; color: white;'>Auringon lasku- ja nousuajat: {valittu_nimi} — {valittu_kk}</h3>", unsafe_allow_html=True)
+# 7. TAULUKKO
+st.write(f"### 🗓️ Ennuste: {selected_city}")
+dates, sunrises, sunsets = [], [], []
+today = datetime.date.today()
+for i in range(14):
+    d = today + datetime.timedelta(days=i)
+    s_day = sun(loc.observer, date=d, tzinfo=pytz.timezone("Europe/Helsinki"))
+    dates.append(d.strftime("%d.%m."))
+    sunrises.append(s_day['sunrise'].strftime("%H:%M"))
+    sunsets.append(s_day['sunset'].strftime("%H:%M"))
 
-paivat = []
-for d in range(1, 32):
-    try:
-        pvm = datetime.date(2026, kk_nro, d)
-        s = sun(loc.observer, date=pvm, tzinfo=tz)
-        gh_s, _ = golden_hour(loc.observer, date=pvm, direction=SunDirection.SETTING, tzinfo=tz)
-        paivat.append({"Päivä": d, "🌅 Nousu": s['sunrise'].strftime('%H:%M'), "🌇 Lasku": s['sunset'].strftime('%H:%M'), "☀️ Kultainen": gh_s.strftime('%H:%M')})
-    except: continue
+df = pd.DataFrame({"Päivä": dates, "Nousu": sunrises, "Lasku": sunsets})
+st.table(df)
 
-st.dataframe(pd.DataFrame(paivat).style.set_properties(**{'background-color': 'rgba(255, 255, 255, 0.05)', 'color': '#2c3e50', 'border-color': 'rgba(255, 255, 255, 0.1)'}), use_container_width=True, hide_index=True)
-
-# SEO-ALATUNNISTE
-st.markdown(f"""
-    <div style='padding: 20px; color: white; opacity: 0.8; font-size: 0.9rem;'>
-        <b>Aurora-sääpalvelu:</b> Tarkat auringon nousu- ja laskuajat paikkakunnalle {valittu_nimi} ja koko Suomeen. 
-        Suunnittele valokuvaus kultaisen hetken mukaan ja seuraa valoisan ajan lisääntymistä.
-    </div>
-""", unsafe_allow_html=True)
-
-# SÄHKÖPOSTI
-st.markdown("""
-    <div style='text-align: center; margin-top: 20px;'>
-        <a href='mailto:aino.forss@gmail.com?subject=Mainostiedustelu - Aurora App' class='contact-btn'>
-            📩 Ota yhteyttä ja varaa mainostilaa
-        </a>
-    </div>
-    <br>
-    <p style='text-align: center; opacity: 0.5; font-size: 0.7rem; color: white;'>© 2026 Aurora. Kaikki oikeudet pidätetään.</p>
-""", unsafe_allow_html=True)
+# 8. YHTEYSTIETO
+st.write("---")
+contact_html = f"""
+    <a href="mailto:aino.forss@gmail.com" style="text-decoration: none;">
+        <div style="background-color: #2c3e50; color: white; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold;">
+            Ota yhteyttä: Aino Forss
+        </div>
+    </a>
+"""
+st.markdown(contact_html, unsafe_allow_html=True)
