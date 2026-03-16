@@ -13,51 +13,56 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. TYYLITIEDOSTO (Palautettu alkuperäinen oranssi-keltainen tyyli)
+# 2. TYYLITIEDOSTO (Kopioitu suoraan kuvasi tyylistä)
 st.markdown("""
 <style>
+    /* Taustaväri: Pehmeä pastelliliukuväri */
     .stApp {
-        background: linear-gradient(135deg, #fceabb 0%, #f8b500 50%, #fceabb 100%);
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(180deg, #ffafbd 0%, #ffc3a0 50%, #eeffad 100%);
+        font-family: 'Segoe UI', sans-serif;
     }
 
+    /* Lasimaiset kortit (Glassmorphism) */
     .glass-card {
-        background: rgba(255, 255, 255, 0.25);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        padding: 25px;
-        margin-bottom: 20px;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(5px);
+        border-radius: 30px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
         text-align: center;
-        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
     }
 
+    /* Otsikot */
     h1 {
-        font-size: 3.5rem !important;
-        font-weight: 800;
-        color: #2c3e50;
+        font-size: 4rem !important;
+        font-weight: 700;
+        color: #3e4a61;
         text-align: center;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        margin-top: -20px;
+        margin-bottom: 0px;
     }
 
     .sub-title {
-        color: #34495e;
+        color: #3e4a61;
         text-align: center;
-        font-size: 1.2rem;
-        margin-bottom: 30px;
+        font-size: 1.3rem;
+        margin-bottom: 40px;
     }
 
-    .time-label { font-size: 0.9rem; color: #555; margin-bottom: 5px; }
-    .time-value { font-size: 1.8rem; font-weight: bold; color: #2c3e50; }
-    .countdown { font-size: 2.5rem; font-weight: 900; color: #e74c3c; margin-top: 10px; }
-    
-    /* Siisteyttä taulukkoon */
-    .stTable {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 15px;
+    /* Tekstityylit korteissa */
+    .time-label { font-size: 1rem; color: #4a5568; margin-bottom: 5px; }
+    .time-value { font-size: 2.2rem; font-weight: 600; color: #2d3748; }
+    .countdown { font-size: 2.5rem; font-weight: 800; color: #f56565; }
+
+    /* Mainospaikka-tyyli */
+    .ad-slot {
+        background: rgba(255, 255, 255, 0.2);
+        border: 2px dashed rgba(255, 255, 255, 0.5);
+        border-radius: 20px;
+        padding: 15px;
+        color: #ffffff;
+        font-size: 0.9rem;
+        margin-bottom: 25px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -71,9 +76,9 @@ CITIES = {
     "Rovaniemi": {"lat": 66.5039, "lon": 25.7282}
 }
 
-# 4. SIVUPALKKI (Täältä vaihdetaan kaupunki)
+# 4. SIVUPALKKI
 st.sidebar.title("Asetukset")
-selected_city = st.sidebar.selectbox("📍 Valitse sijainti", list(CITIES.keys()))
+selected_city = st.sidebar.selectbox("Valitse sijainti", list(CITIES.keys()))
 
 # 5. LASKELMAT
 loc = LocationInfo(selected_city, "Finland", "Europe/Helsinki", CITIES[selected_city]["lat"], CITIES[selected_city]["lon"])
@@ -85,49 +90,40 @@ now = datetime.datetime.now(pytz.timezone("Europe/Helsinki"))
 st.markdown("<h1>AURORA</h1>", unsafe_allow_html=True)
 st.markdown(f'<p class="sub-title">Auringonlasku ja auringonnousu: {selected_city}</p>', unsafe_allow_html=True)
 
-# Kultainen hetki kortti
-st.markdown(f"""
-<div class="glass-card">
-    <p class="time-label">✨ Kultainen hetki alkaa kohteessa {selected_city}</p>
-""", unsafe_allow_html=True)
+# Mainospaikka
+st.markdown('<div class="ad-slot" style="text-align:center;">Tähän paikkaan voit varata mainoksen</div>', unsafe_allow_html=True)
 
+# Kultainen hetki kortti
+st.markdown(f'<div class="glass-card"><p class="time-label">✨ Kultainen hetki alkaa kohteessa {selected_city}</p>', unsafe_allow_html=True)
 if now < golden_hour_start:
     diff = golden_hour_start - now
     hours, remainder = divmod(diff.seconds, 3600)
     minutes, _ = divmod(remainder, 60)
     st.markdown(f'<p class="countdown">{hours}h {minutes}min päästä</p>', unsafe_allow_html=True)
-elif now < s['sunset']:
-    st.markdown('<p class="countdown" style="color: #f39c12;">Kultainen hetki on NYT!</p>', unsafe_allow_html=True)
 else:
-    st.markdown('<p class="countdown" style="color: #7f8c8d;">Nauti illasta</p>', unsafe_allow_html=True)
+    st.markdown('<p class="countdown" style="color: #4a5568;">Nauti illasta</p>', unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Sarakkeet rinnakkain (Nousu, Kultainen hetki, Lasku)
-col1, col2, col3 = st.columns(3)
+# Aikakortit
+st.markdown(f"""
+<div class="glass-card">
+    <p class="time-label">🌅 Nousuaika</p>
+    <p class="time-value">{s['sunrise'].strftime('%H:%M')}</p>
+</div>
+<div class="glass-card">
+    <p class="time-label">✨ Kultainen hetki</p>
+    <p class="time-value">{golden_hour_start.strftime('%H:%M')}</p>
+</div>
+<div class="glass-card">
+    <p class="time-label">🌇 Laskuaika</p>
+    <p class="time-value">{s['sunset'].strftime('%H:%M')}</p>
+</div>
+""", unsafe_allow_html=True)
 
-with col1:
-    st.markdown(f"""<div class="glass-card">
-        <p class="time-label">🌅 Nousu</p>
-        <p class="time-value">{s['sunrise'].strftime('%H:%M')}</p>
-    </div>""", unsafe_allow_html=True)
-
-with col2:
-    st.markdown(f"""<div class="glass-card">
-        <p class="time-label">✨ Kultainen</p>
-        <p class="time-value">{golden_hour_start.strftime('%H:%M')}</p>
-    </div>""", unsafe_allow_html=True)
-
-with col3:
-    st.markdown(f"""<div class="glass-card">
-        <p class="time-label">🌇 Lasku</p>
-        <p class="time-value">{s['sunset'].strftime('%H:%M')}</p>
-    </div>""", unsafe_allow_html=True)
-
-# 7. KUUKAUSITAULUKKO (Takaisin mukana!)
-st.write(f"### 🗓️ Loppukuun ennuste: {selected_city}")
+# 7. TAULUKKO (Saman tyylinen kuin korteissa)
+st.write(f"### 🗓️ Ennuste: {selected_city}")
 dates, sunrises, sunsets = [], [], []
 today = datetime.date.today()
-
 for i in range(14):
     d = today + datetime.timedelta(days=i)
     s_day = sun(loc.observer, date=d, tzinfo=pytz.timezone("Europe/Helsinki"))
@@ -135,18 +131,12 @@ for i in range(14):
     sunrises.append(s_day['sunrise'].strftime("%H:%M"))
     sunsets.append(s_day['sunset'].strftime("%H:%M"))
 
-df = pd.DataFrame({
-    "Päivä": dates, 
-    "Nousuaika": sunrises, 
-    "Laskuaika": sunsets
-})
+df = pd.DataFrame({"Päivä": dates, "Nousu": sunrises, "Lasku": sunsets})
 st.table(df)
 
-# 8. LOPPUOSA
+# 8. YHTEYSTIETO
 st.write("---")
-st.info("💡 Kultainen hetki (Golden Hour) on täydellinen hetki valokuvaukselle ja mielenrauhalle.")
-
-contact_html = """
+contact_html = f"""
     <a href="mailto:aino.forss@gmail.com" style="text-decoration: none;">
         <div style="background-color: #2c3e50; color: white; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold;">
             Ota yhteyttä: Aino Forss
