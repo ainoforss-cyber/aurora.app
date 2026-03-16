@@ -18,7 +18,7 @@ st.set_page_config(
 
 # 2. ULKOASU: LUXURY GLASSMORPHISM + YLÄPALKIN POISTO
 st.markdown("""
-<meta name="google-site-verification" content="google2b5ba71c4d6d2158" />
+<meta name="google-site-verification" content="zz9Dc9YUpEk6W-4eWfpK9LNjOTIzwyDs7cMq-BRrUE8" />
 <style>
     /* PIILOTETAAN YLÄPALKKI */
     header {visibility: hidden !important;}
