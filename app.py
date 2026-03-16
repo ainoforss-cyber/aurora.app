@@ -4,7 +4,7 @@ from astral.sun import sun, golden_hour
 from astral import LocationInfo, SunDirection
 import datetime
 import pytz
-
+st.write(f'<p style="display:none;">google-site-verification: zz9Dc9YUpEk6W-4eWfpK9LNjOTIzwyDs7cMq-BRrUE8</p>', unsafe_allow_html=True)
 # 1. SEO & META-TIEDOT
 st.set_page_config(
     page_title="Auringonlasku ja auringonnousu tänään – Aurora",
